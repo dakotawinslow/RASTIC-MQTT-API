@@ -11,7 +11,7 @@ from configparser import ConfigParser
 from datetime import datetime, timedelta, timezone
 
 import paho.mqtt.client as mqtt
-from flask import Flask, jsonify, request
+from flask import Flask, jsonify, render_template_string, request
 
 # ── Global state ─────────────────────────────────────────────────────────────
 
@@ -180,6 +180,80 @@ def start_mqtt(config: ConfigParser) -> None:
     client.loop_forever()
 
 
+# ── Widget HTML template ──────────────────────────────────────────────────────
+
+WIDGET_HTML = """<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MQTT Widget</title>
+<style>
+  body { font-family: sans-serif; margin: 0; padding: 12px; background: #f5f5f5; }
+  table { width: 100%; border-collapse: collapse; background: #fff; border-radius: 6px;
+          overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,.15); }
+  th { background: #333; color: #fff; text-align: left; padding: 8px 12px; font-size: .85rem; }
+  td { padding: 8px 12px; border-bottom: 1px solid #eee; font-size: .9rem; vertical-align: top; }
+  tr:last-child td { border-bottom: none; }
+  .age { font-size: .8rem; }
+  .age.warn  { color: #b45309; }
+  .age.stale { color: #b91c1c; }
+  .no-data   { color: #9ca3af; font-style: italic; }
+</style>
+</head>
+<body>
+<table>
+  <thead><tr><th>Topic</th><th>Last Message</th><th>Updated</th></tr></thead>
+  <tbody id="tbody"></tbody>
+</table>
+<script>
+const CONFIGURED = {{ topics | tojson }};
+let store = {};
+
+function fmtAge(isoTs) {
+  const secs = Math.floor((Date.now() - new Date(isoTs)) / 1000);
+  if (secs < 60)  return [secs + 's ago',  ''];
+  if (secs < 300) return [Math.floor(secs / 60) + 'm ago', 'warn'];
+  if (secs < 3600) return [Math.floor(secs / 60) + 'm ago', 'stale'];
+  return [Math.floor(secs / 3600) + 'h ago', 'stale'];
+}
+
+function render() {
+  const tbody = document.getElementById('tbody');
+  tbody.innerHTML = CONFIGURED.map(topic => {
+    const entry = store[topic];
+    if (!entry) {
+      return `<tr><td>${topic}</td><td colspan="2" class="no-data">No data yet</td></tr>`;
+    }
+    const [age, cls] = fmtAge(entry.timestamp);
+    return `<tr>
+      <td>${topic}</td>
+      <td>${entry.last_message}</td>
+      <td class="age ${cls}">${age}</td>
+    </tr>`;
+  }).join('');
+}
+
+function fetchData() {
+  const params = CONFIGURED.map(t => 'topic=' + encodeURIComponent(t)).join('&');
+  Promise.all(CONFIGURED.map(t =>
+    fetch('/mqtt?topic=' + encodeURIComponent(t))
+      .then(r => r.json())
+      .catch(() => ({}))
+  )).then(results => {
+    results.forEach(obj => Object.assign(store, obj));
+    render();
+  });
+}
+
+fetchData();
+setInterval(render, 1000);
+setInterval(fetchData, 5000);
+</script>
+</body>
+</html>"""
+
+
 # ── REST API ──────────────────────────────────────────────────────────────────
 
 @app.route("/mqtt")
@@ -209,6 +283,11 @@ def get_topics():
         if k == topic_filter or k.startswith(topic_filter + "/")
     }
     return jsonify(filtered)
+
+
+@app.route("/widget")
+def get_widget():
+    return render_template_string(WIDGET_HTML, topics=widget_topics)
 
 
 # ── Entry point ───────────────────────────────────────────────────────────────
