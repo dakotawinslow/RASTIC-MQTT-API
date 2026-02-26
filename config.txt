@@ -1,0 +1,37 @@
+[mqtt]
+# MQTT broker hostname or IP address
+host = localhost
+
+# MQTT broker port (standard: 1883, TLS: 8883)
+port = 1883
+
+# Credentials — leave blank if the broker allows anonymous access
+username =
+password =
+
+# Set to true to enable TLS/SSL on the MQTT connection
+use_tls = false
+
+# Path to a CA certificate file for broker TLS verification.
+# Leave blank to use system default CA bundle.
+ca_cert =
+
+# Keepalive interval in seconds
+keepalive = 60
+
+
+[api]
+# Network interface to bind the REST API server to.
+# Use 0.0.0.0 to accept connections on all interfaces,
+# or 127.0.0.1 to restrict to localhost only.
+host = 0.0.0.0
+
+# HTTPS port. Port 443 requires elevated privileges on Linux/macOS.
+# Use a high port (e.g. 8443) to run without sudo.
+port = 443
+
+# TLS certificate and private key for HTTPS.
+# If these files do not exist, a self-signed certificate is generated
+# automatically (requires the 'cryptography' package).
+ssl_cert = cert.pem
+ssl_key  = key.pem
