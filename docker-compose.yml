@@ -1,0 +1,8 @@
+services:
+  mqtt-api:
+    build: .
+    ports:
+      - "8443:8443"   # must match [api] port in config.txt
+    volumes:
+      - ./config.txt:/app/config.txt:ro
+    restart: unless-stopped
