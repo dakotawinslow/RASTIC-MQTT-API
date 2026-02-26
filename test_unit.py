@@ -218,6 +218,36 @@ class TestGetTopicsEndpoint:
             assert "timestamp" in entry
 
 
+# ── GET /widget ───────────────────────────────────────────────────────────────
+
+class TestWidgetEndpoint:
+    def setup_method(self):
+        mqtt_api.widget_topics = ["sensors/temperature", "sensors/humidity"]
+        self.client = mqtt_api.app.test_client()
+
+    def teardown_method(self):
+        mqtt_api.widget_topics = []
+
+    def test_returns_200(self):
+        resp = self.client.get("/widget")
+        assert resp.status_code == 200
+
+    def test_content_type_is_html(self):
+        resp = self.client.get("/widget")
+        assert "text/html" in resp.content_type
+
+    def test_configured_topics_appear_in_response(self):
+        resp = self.client.get("/widget")
+        body = resp.data.decode()
+        assert "sensors/temperature" in body
+        assert "sensors/humidity" in body
+
+    def test_empty_topics_renders_without_error(self):
+        mqtt_api.widget_topics = []
+        resp = self.client.get("/widget")
+        assert resp.status_code == 200
+
+
 # ── generate_self_signed_cert ─────────────────────────────────────────────────
 
 class TestGenerateSelfSignedCert:
