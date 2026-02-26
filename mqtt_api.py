@@ -17,6 +17,7 @@ from flask import Flask, jsonify, request
 
 topics: dict = {}
 topics_lock = threading.Lock()
+widget_topics: list = []
 
 app = Flask(__name__)
 
@@ -38,6 +39,9 @@ DEFAULTS = {
         "port": "443",
         "ssl_cert": "cert.pem",
         "ssl_key": "key.pem",
+    },
+    "widget": {
+        "topics": "",
     },
 }
 
@@ -210,7 +214,11 @@ def get_topics():
 # ── Entry point ───────────────────────────────────────────────────────────────
 
 def main():
+    global widget_topics
     config = load_config()
+
+    topics_raw = config["widget"]["topics"].strip()
+    widget_topics = [t.strip() for t in topics_raw.split(",") if t.strip()]
 
     mqtt_thread = threading.Thread(target=start_mqtt, args=(config,), daemon=True)
     mqtt_thread.start()
@@ -226,6 +234,7 @@ def main():
     port = api_cfg.getint("port", 443)
 
     print(f"API:  Listening on https://localhost:{port}/mqtt")
+    print(f"API:  Widget at https://localhost:{port}/widget")
     app.run(host=host, port=port, ssl_context=(cert_path, key_path))
 
 

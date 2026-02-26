@@ -1,6 +1,6 @@
 [mqtt]
 # MQTT broker hostname or IP address
-host = localhost
+host = 172.16.0.100
 
 # MQTT broker port (standard: 1883, TLS: 8883)
 port = 1883
@@ -28,10 +28,16 @@ host = 0.0.0.0
 
 # HTTPS port. Port 443 requires elevated privileges on Linux/macOS.
 # Use a high port (e.g. 8443) to run without sudo.
-port = 443
+port = 8443
 
 # TLS certificate and private key for HTTPS.
 # If these files do not exist, a self-signed certificate is generated
 # automatically (requires the 'cryptography' package).
 ssl_cert = cert.pem
 ssl_key  = key.pem
+
+
+[widget]
+# Comma-separated MQTT topics to display in the /widget dashboard.
+# Leave blank to show an empty dashboard.
+topics = sensors/temperature, sensors/humidity
