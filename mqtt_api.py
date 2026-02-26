@@ -204,7 +204,7 @@ WIDGET_HTML = """<!DOCTYPE html>
 </head>
 <body>
 <table>
-  <thead><tr><th>Topic</th><th>Last Message</th><th>Updated</th></tr></thead>
+  <thead><tr><th>Name</th><th>Topic</th><th>Last Message</th><th>Updated</th></tr></thead>
   <tbody id="tbody"></tbody>
 </table>
 <script>
@@ -221,14 +221,15 @@ function fmtAge(isoTs) {
 
 function render() {
   const tbody = document.getElementById('tbody');
-  tbody.innerHTML = CONFIGURED.map(topic => {
-    const entry = store[topic];
+  tbody.innerHTML = CONFIGURED.map(t => {
+    const entry = store[t.topic];
     if (!entry) {
-      return `<tr><td>${topic}</td><td colspan="2" class="no-data">No data yet</td></tr>`;
+      return `<tr><td>${t.name}</td><td>${t.topic}</td><td colspan="2" class="no-data">No data yet</td></tr>`;
     }
     const [age, cls] = fmtAge(entry.timestamp);
     return `<tr>
-      <td>${topic}</td>
+      <td>${t.name}</td>
+      <td>${t.topic}</td>
       <td>${entry.last_message}</td>
       <td class="age ${cls}">${age}</td>
     </tr>`;
@@ -236,9 +237,8 @@ function render() {
 }
 
 function fetchData() {
-  const params = CONFIGURED.map(t => 'topic=' + encodeURIComponent(t)).join('&');
   Promise.all(CONFIGURED.map(t =>
-    fetch('/mqtt?topic=' + encodeURIComponent(t))
+    fetch('/mqtt?topic=' + encodeURIComponent(t.topic))
       .then(r => r.json())
       .catch(() => ({}))
   )).then(results => {
@@ -297,8 +297,16 @@ def main():
     global widget_topics
     config = load_config()
 
-    topics_raw = config["widget"]["topics"].strip()
-    widget_topics = [t.strip() for t in topics_raw.split(",") if t.strip()]
+    widget_topics = []
+    for item in config["widget"]["topics"].split(","):
+        item = item.strip()
+        if not item:
+            continue
+        if ":" in item:
+            topic, name = item.split(":", 1)
+            widget_topics.append({"topic": topic.strip(), "name": name.strip()})
+        else:
+            widget_topics.append({"topic": item, "name": item})
 
     mqtt_thread = threading.Thread(target=start_mqtt, args=(config,), daemon=True)
     mqtt_thread.start()

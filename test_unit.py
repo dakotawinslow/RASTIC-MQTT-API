@@ -229,7 +229,10 @@ class TestGetTopicsEndpoint:
 
 class TestWidgetEndpoint:
     def setup_method(self):
-        mqtt_api.widget_topics = ["sensors/temperature", "sensors/humidity"]
+        mqtt_api.widget_topics = [
+            {"topic": "sensors/temperature", "name": "Temperature"},
+            {"topic": "sensors/humidity", "name": "Humidity"},
+        ]
         self.client = mqtt_api.app.test_client()
 
     def teardown_method(self):
@@ -243,7 +246,13 @@ class TestWidgetEndpoint:
         resp = self.client.get("/widget")
         assert "text/html" in resp.content_type
 
-    def test_configured_topics_appear_in_response(self):
+    def test_friendly_names_appear_in_response(self):
+        resp = self.client.get("/widget")
+        body = resp.data.decode()
+        assert "Temperature" in body
+        assert "Humidity" in body
+
+    def test_topic_paths_appear_in_response(self):
         resp = self.client.get("/widget")
         body = resp.data.decode()
         assert "sensors/temperature" in body

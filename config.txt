@@ -32,7 +32,7 @@ port = 8443
 
 # Set to false to serve over plain HTTP instead of HTTPS.
 # Useful for development or when TLS is handled by a reverse proxy.
-use_ssl = true
+use_ssl = false
 
 # TLS certificate and private key for HTTPS.
 # If these files do not exist, a self-signed certificate is generated
@@ -43,5 +43,6 @@ ssl_key  = key.pem
 
 [widget]
 # Comma-separated MQTT topics to display in the /widget dashboard.
+# Optionally append :Friendly Name after each topic.
 # Leave blank to show an empty dashboard.
-topics = door/main/status, resources/Mac-Mini
+topics = door/main/status:Front Door, resources/Mac-Mini:Mac Mini
