@@ -46,6 +46,19 @@ uv run pytest test_config.py -v     # Requires a live broker
 uv run pytest -v                    # Everything
 ```
 
+## Git workflow
+
+**Commit granularly.** Commit early and often so the tree reads as a clear log of how the project evolved. Each commit should represent one coherent unit of work — a single behaviour change, a new test, a refactor step. Do not bundle unrelated changes into one commit.
+
+**Push selectively.** Pushing upstream on every commit is not required. Push when a feature is ready to merge, when handing off work, or when the user asks.
+
+**Branch for new features.** Any self-contained new feature gets its own branch. The workflow is:
+1. `git checkout -b feature/<name>` before starting work
+2. Commit incrementally to that branch as the feature develops
+3. Merge to `main` only when the user confirms the feature is ready
+
+Large structural changes (e.g. a new module, a significant refactor) should still be broken into a series of small, logical commits even within a single branch — not delivered as one giant commit at the end.
+
 ## Key conventions
 
 - Timestamps are always ISO 8601 UTC (`datetime.now(timezone.utc).isoformat()`)
