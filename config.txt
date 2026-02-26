@@ -30,6 +30,10 @@ host = 0.0.0.0
 # Use a high port (e.g. 8443) to run without sudo.
 port = 8443
 
+# Set to false to serve over plain HTTP instead of HTTPS.
+# Useful for development or when TLS is handled by a reverse proxy.
+use_ssl = true
+
 # TLS certificate and private key for HTTPS.
 # If these files do not exist, a self-signed certificate is generated
 # automatically (requires the 'cryptography' package).
@@ -40,4 +44,4 @@ ssl_key  = key.pem
 [widget]
 # Comma-separated MQTT topics to display in the /widget dashboard.
 # Leave blank to show an empty dashboard.
-topics = sensors/temperature, sensors/humidity
+topics = door/main/status, resources/Mac-Mini

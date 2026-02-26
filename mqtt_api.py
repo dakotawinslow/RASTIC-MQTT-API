@@ -37,6 +37,7 @@ DEFAULTS = {
     "api": {
         "host": "0.0.0.0",
         "port": "443",
+        "use_ssl": "true",
         "ssl_cert": "cert.pem",
         "ssl_key": "key.pem",
     },
@@ -303,18 +304,24 @@ def main():
     mqtt_thread.start()
 
     api_cfg = config["api"]
-    cert_path = api_cfg.get("ssl_cert", "cert.pem").strip()
-    key_path = api_cfg.get("ssl_key", "key.pem").strip()
-
-    if not (os.path.exists(cert_path) and os.path.exists(key_path)):
-        generate_self_signed_cert(cert_path, key_path)
-
+    use_ssl = api_cfg.getboolean("use_ssl", True)
     host = api_cfg.get("host", "0.0.0.0").strip()
     port = api_cfg.getint("port", 443)
 
-    print(f"API:  Listening on https://localhost:{port}/mqtt")
-    print(f"API:  Widget at https://localhost:{port}/widget")
-    app.run(host=host, port=port, ssl_context=(cert_path, key_path))
+    if use_ssl:
+        cert_path = api_cfg.get("ssl_cert", "cert.pem").strip()
+        key_path = api_cfg.get("ssl_key", "key.pem").strip()
+        if not (os.path.exists(cert_path) and os.path.exists(key_path)):
+            generate_self_signed_cert(cert_path, key_path)
+        ssl_context = (cert_path, key_path)
+        scheme = "https"
+    else:
+        ssl_context = None
+        scheme = "http"
+
+    print(f"API:  Listening on {scheme}://localhost:{port}/mqtt")
+    print(f"API:  Widget at {scheme}://localhost:{port}/widget")
+    app.run(host=host, port=port, ssl_context=ssl_context)
 
 
 if __name__ == "__main__":

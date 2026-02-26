@@ -81,6 +81,13 @@ class TestLoadConfig:
         assert config["mqtt"]["port"] == "1883"
         assert config["mqtt"]["keepalive"] == "60"
         assert config["api"]["port"] == "443"
+        assert config.getboolean("api", "use_ssl") is True
+
+    def test_use_ssl_can_be_disabled(self, tmp_path):
+        f = tmp_path / "config.txt"
+        f.write_text("[mqtt]\n[api]\nuse_ssl = false\n")
+        config = mqtt_api.load_config(str(f))
+        assert config.getboolean("api", "use_ssl") is False
 
     def test_missing_file_raises_system_exit(self, tmp_path):
         with pytest.raises(SystemExit):
