@@ -145,6 +145,42 @@ class TestOnConnect:
         mqtt_api.on_connect(client, None, None, rc)
         client.subscribe.assert_not_called()
 
+    def test_configured_only_subscribes_to_listed_topics(self):
+        client = MagicMock()
+        userdata = {
+            "subscribe_configured_only": True,
+            "configured_topics": ["door/main/status", "resources/Mac-Mini"],
+        }
+        mqtt_api.on_connect(client, userdata, None, 0)
+        client.subscribe.assert_called_once_with([
+            ("door/main/status", 0),
+            ("resources/Mac-Mini", 0),
+        ])
+
+    def test_configured_only_unsubscribes_wildcard_first(self):
+        client = MagicMock()
+        userdata = {
+            "subscribe_configured_only": True,
+            "configured_topics": ["door/main/status"],
+        }
+        mqtt_api.on_connect(client, userdata, None, 0)
+        client.unsubscribe.assert_called_once_with("#")
+
+    def test_configured_only_with_no_topics_does_not_subscribe(self):
+        client = MagicMock()
+        userdata = {"subscribe_configured_only": True, "configured_topics": []}
+        mqtt_api.on_connect(client, userdata, None, 0)
+        client.subscribe.assert_not_called()
+
+    def test_configured_only_false_still_uses_wildcard(self):
+        client = MagicMock()
+        userdata = {
+            "subscribe_configured_only": False,
+            "configured_topics": ["door/main/status"],
+        }
+        mqtt_api.on_connect(client, userdata, None, 0)
+        client.subscribe.assert_called_once_with("#")
+
 
 # ── GET /mqtt ─────────────────────────────────────────────────────────────────
 
