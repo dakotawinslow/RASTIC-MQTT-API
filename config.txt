@@ -20,6 +20,11 @@ ca_cert =
 # generate a unique ID automatically.
 client_id =
 
+# When true, subscribe only to the topics listed in [widget] rather than
+# the catch-all wildcard (#). On startup the script will also unsubscribe
+# from # to clear any lingering subscriptions from a previous session.
+subscribe_configured_only = false
+
 # Keepalive interval in seconds
 keepalive = 60
 

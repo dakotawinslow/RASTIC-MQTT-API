@@ -33,6 +33,7 @@ DEFAULTS = {
         "use_tls": "false",
         "ca_cert": "",
         "keepalive": "60",
+        "subscribe_configured_only": "false",
     },
     "api": {
         "host": "0.0.0.0",
@@ -129,8 +130,19 @@ _CONNECT_CODES = {
 def on_connect(client, userdata, flags, rc):
     print(f"MQTT: {_CONNECT_CODES.get(rc, f'Unknown result code {rc}')}")
     if rc == 0:
-        client.subscribe("#")
-        print("MQTT: Subscribed to all topics (#)")
+        if userdata and userdata.get("subscribe_configured_only"):
+            configured = userdata.get("configured_topics", [])
+            # Unsubscribe from the catch-all wildcard to clean up any
+            # lingering persistent-session subscriptions from a previous run.
+            client.unsubscribe("#")
+            if configured:
+                client.subscribe([(t, 0) for t in configured])
+                print(f"MQTT: Subscribed to {len(configured)} configured topic(s): {', '.join(configured)}")
+            else:
+                print("MQTT: subscribe_configured_only is set but no topics are configured")
+        else:
+            client.subscribe("#")
+            print("MQTT: Subscribed to all topics (#)")
 
 
 def on_disconnect(client, userdata, rc):
@@ -155,10 +167,14 @@ def on_message(client, userdata, msg):
         topics[msg.topic] = entry
 
 
-def start_mqtt(config: ConfigParser) -> None:
+def start_mqtt(config: ConfigParser, configured_topics: list) -> None:
     cfg = config["mqtt"]
     client_id = cfg.get("client_id", "").strip() or None
-    client = mqtt.Client(client_id=client_id)
+    userdata = {
+        "subscribe_configured_only": cfg.getboolean("subscribe_configured_only", False),
+        "configured_topics": configured_topics,
+    }
+    client = mqtt.Client(client_id=client_id, userdata=userdata)
 
     username = cfg.get("username", "").strip()
     password = cfg.get("password", "").strip()
@@ -309,7 +325,8 @@ def main():
         else:
             widget_topics.append({"topic": item, "name": item})
 
-    mqtt_thread = threading.Thread(target=start_mqtt, args=(config,), daemon=True)
+    configured_topics = [wt["topic"] for wt in widget_topics]
+    mqtt_thread = threading.Thread(target=start_mqtt, args=(config, configured_topics), daemon=True)
     mqtt_thread.start()
 
     api_cfg = config["api"]
