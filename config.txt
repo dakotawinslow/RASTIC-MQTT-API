@@ -18,12 +18,12 @@ ca_cert =
 
 # Client ID presented to the MQTT broker. Leave blank to let the library
 # generate a unique ID automatically.
-client_id =
+client_id = "home.rastic.org"
 
 # When true, subscribe only to the topics listed in [widget] rather than
 # the catch-all wildcard (#). On startup the script will also unsubscribe
 # from # to clear any lingering subscriptions from a previous session.
-subscribe_configured_only = false
+subscribe_configured_only = true
 
 # Keepalive interval in seconds
 keepalive = 60
@@ -54,4 +54,4 @@ ssl_key  = key.pem
 # Comma-separated MQTT topics to display in the /widget dashboard.
 # Optionally append :Friendly Name after each topic.
 # Leave blank to show an empty dashboard.
-topics = door/main/status:Front Door, resources/Mac-Mini:Mac Mini, resources/Playground-VM:Playground, resources/RASTIC-XPS: XPS, resources/Zyxel-AP:Rastic WiFi,
+topics = door/main/status:Front Door
