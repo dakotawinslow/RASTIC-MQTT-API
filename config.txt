@@ -16,6 +16,10 @@ use_tls = false
 # Leave blank to use system default CA bundle.
 ca_cert =
 
+# Client ID presented to the MQTT broker. Leave blank to let the library
+# generate a unique ID automatically.
+client_id =
+
 # Keepalive interval in seconds
 keepalive = 60
 

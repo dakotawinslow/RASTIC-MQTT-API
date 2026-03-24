@@ -157,7 +157,8 @@ def on_message(client, userdata, msg):
 
 def start_mqtt(config: ConfigParser) -> None:
     cfg = config["mqtt"]
-    client = mqtt.Client()
+    client_id = cfg.get("client_id", "").strip() or None
+    client = mqtt.Client(client_id=client_id)
 
     username = cfg.get("username", "").strip()
     password = cfg.get("password", "").strip()
